@@ -1,40 +1,89 @@
+import time
 
 alphabet = 'BJRMOFPV'
 spots = 4
 
 combinations = []
+combinations_repartition = {}
+
+
+def letters_from_combination(c):
+    o = {}
+    for l in alphabet:
+        o[l] = 0
+
+    for l in c:
+        o[l] += 1
+
+    letters = []
+    for l in alphabet:
+        letters.append(o[l])
+
+    return letters
+
 
 
 def create_combinations(prefix, remaining_spots):
     for l in alphabet:
         if remaining_spots == 1:
-            combinations.append(prefix + l)
+            c = prefix + l
+            combinations.append(c)
+            combinations_repartition[c] = letters_from_combination(c)
         else:
             create_combinations(prefix + l, remaining_spots - 1)
 
+
+
+start_time = time.time()
+
 create_combinations('', spots)
+
+print(f"Timed creating combinations: {time.time() - start_time}")
+
 
 
 def compare(a, b):
     if len(a) != spots or len(b) != spots:
         raise BaseException("Wrong size")
 
+    # Counting letters on the spot
+    # m = 0
+    # o = {}
+    # for l in a:
+        # if l in o:
+            # o[l] += 1
+        # else:
+            # o[l] = 1
+
+    # for l in b:
+        # if l not in o:
+            # o[l] = 0
+
+        # if o[l] > 0:
+            # m += 1
+
+        # o[l] -= 1
+
+    # Letters having been counted before is slower
+    al = combinations_repartition[a]
+    bl = combinations_repartition[b]
     m = 0
-    o = {}
-    for l in a:
-        if l in o:
-            o[l] += 1
-        else:
-            o[l] = 1
+    # for i in range(0, len(al)):
+        # m += min(al[i], bl[i])
 
-    for l in b:
-        if l not in o:
-            o[l] = 0
+    for i, j in zip(al, bl):
+        m += min(i, j)
+    # m = sum([min(al[i], bl[i]) for i in range(0, len(al))])
 
-        if o[l] > 0:
-            m += 1
+    # Sorting then counting
+    # m = 0
+    # a = sorted(a)
+    # b = sorted(b)
+    # i = 0
+    # while l < len(a):
+        # xxx
 
-        o[l] -= 1
+
 
     e = 0
     for i in range(0, spots):
@@ -81,17 +130,17 @@ def show_remaining_possibilities():
 
 
 def ask_input(the_try):
-    test = ""
+    pair = ""
 
     try:
-        test = input(f"I try {the_try}, what is the result: ")
-        test = tuple(map(int, test.split(',')))
-        if len(test) != 2 or int(test[0]) < 0 or int(test[0]) > spots or int(test[1]) < 0 or int(test[1]) > spots:
+        pair = input(f"I try {the_try}, what is the result: ")
+        pair = tuple(map(int, pair.split(',')))
+        if len(pair) != 2 or int(pair[0]) < 0 or int(pair[0]) > spots or int(pair[1]) < 0 or int(pair[1]) > spots:
             assert False
     except:
-        test = ask_input(the_try)
+        pair = ask_input(the_try)
 
-    return test
+    return pair
 
 
 def autoplay():
@@ -135,9 +184,11 @@ def autoplay():
 
 
 
+start_time = time.time()
 
 def interactive_play():
     global combinations
+    global start_time
 
     print(f"Alphabet: {alphabet}")
     input("To make your life simpler you can input your code here I won't look :) --> ")
@@ -146,11 +197,21 @@ def interactive_play():
     the_try = (alphabet[0] * int(spots / 2)) + (alphabet[1] * int(spots / 2))
 
     show_remaining_possibilities()
-    test = ask_input(the_try)
-    combinations = remove_combinations(the_try, test)
+    pair = ask_input(the_try)
+
+
+    start_time = time.time()
+
+    combinations = remove_combinations(the_try, pair)
+
+    print(f"Timed remove combinations: {time.time() - start_time}")
+
     show_remaining_possibilities()
 
+
     while len(combinations) > 1:
+        start_time = time.time()
+
         the_try = combinations[0]
         the_score = len(alphabet) ** spots + 1
         _s = the_score
@@ -161,8 +222,10 @@ def interactive_play():
                 the_score = _s
                 the_try = t
 
-        test = ask_input(the_try)
-        combinations = remove_combinations(the_try, test)
+        print(f"Timed finding best minimax try: {time.time() - start_time}")
+
+        pair = ask_input(the_try)
+        combinations = remove_combinations(the_try, pair)
         show_remaining_possibilities()
 
     if len(combinations) == 1:
@@ -177,6 +240,10 @@ def interactive_play():
 
 interactive_play()
 
+
+print("LAUNCH")
+
+remove_combinations("BBJJ", (2,0))
 
 
 
